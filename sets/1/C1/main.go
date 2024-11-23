@@ -9,15 +9,12 @@ const base64Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123
 
 func Base64Encode(src []byte) []byte {
 
-	length := len(src)
-	// Not sure how to calculate length here.
-	dst := make([]byte, length*2)
+	// 4 * input length / 3
+	length := (len(src) + 2) / 3 * 4
+	dst := make([]byte, length)
 	if len(src) == 0 {
 		return nil
 	}
-	// enc is a pointer receiver, so the use of enc.encode within the hot
-	// loop below means a nil check at every operation. Lift that nil check
-	// outside of the loop to speed up the encoder.
 
 	di, si := 0, 0
 	n := (len(src) / 3) * 3
