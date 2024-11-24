@@ -1,10 +1,39 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"log"
+	"os"
+	"sync"
 )
+
+func readFile(path string) []string {
+	readLines := []string{}
+
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Println("Unable to read file")
+		return []string{""}
+	}
+
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		readLines = append(readLines, line)
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	return readLines
+}
 
 const commonChars string = "EeTtAaOoIiNn SsHhRrDdLlUu"
 
@@ -84,12 +113,20 @@ func XorDecode(i []byte) {
 }
 
 func main() {
-	inputString, err := hex.DecodeString("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736")
+	var wg sync.WaitGroup
 
-	if err != nil {
-		fmt.Println("InputString Invalid Hex")
+	lines := readFile("inputs.txt")
+	for _, line := range lines {
+		wg.Add(1)
+		line, err := hex.DecodeString(line)
+		if err != nil {
+			fmt.Println("Unable to decode hex")
+			continue
+		}
+		go func(line []byte) {
+			defer wg.Done()
+			XorDecode(line)
+		}(line)
 	}
-
-	XorDecode(inputString)
-
+	wg.Wait()
 }
